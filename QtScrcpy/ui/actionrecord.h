@@ -2,6 +2,7 @@
 #define ACTIONRECORD_H
 
 #include <QWidget>
+#include <QMutex>
 #include "ui_actionrecord.h"
 
 #include <QVector>
@@ -26,7 +27,9 @@ public:
     void appendAction(const QString& action);
     void setSerial(const QString& serial);
     bool recording();
+    void screenshot();
     void step();
+    void stepWithoutScreenshot();
     void loadTasks();
     bool fakeModeActivated();
     void bufferedPress(int x, int y);
@@ -38,15 +41,11 @@ private slots:
 
     void on_endButton_clicked();
 
-    void on_stepButton_clicked();
-
-    void on_domain_currentTextChanged(const QString &text);
-
-    void on_nextEpsButton_clicked();
-
     void on_lineEdit_returnPressed();
 
-    void on_checkBox_stateChanged(int state);
+    void startAtomic();
+
+    void endAtomic();
 
 private:
     void dumpXml(const QString& absPath);
@@ -56,13 +55,14 @@ private:
     QVector<QString> curEpsActions;
     QString serial;
     bool isRecording;
-    bool isFakeModeActivated;
     QMap<QString, QMap<QString, QVector<QString>>> tasks;
 
     QPair<int, int> bufferedPressPos;
     qint64 bufferedPressTime;
 
     qsc::AdbProcess* adb = nullptr;
+
+    QMutex lock;
 };
 
 #endif // ACTIONRECORD_H

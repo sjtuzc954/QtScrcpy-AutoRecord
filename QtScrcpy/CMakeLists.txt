@@ -53,6 +53,7 @@ if (MSVC)
 
     # avoid warning C4819
     add_compile_options(-source-charset:utf-8)
+    add_compile_options(-execution-charset:utf-8)
     #add_compile_options(/utf-8)
 
     # ensure we use minimal "windows.h" lib without the crazy min max macros
