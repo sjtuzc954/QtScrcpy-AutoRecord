@@ -76,7 +76,6 @@ void ActionRecord::on_startButton_clicked()
     // dumpXml(absolutePath);
 }
 
-
 void ActionRecord::on_endButton_clicked()
 {
     auto device = qsc::IDeviceManage::getInstance().getDevice(this->serial);
@@ -92,14 +91,31 @@ void ActionRecord::on_endButton_clicked()
     device->screenshotWithFilename(filename);
 
     const QString& recordRootPath = device->getDeviceParams().recordPath;
-    filename = QString("%1/%2/actions.log")
-                   .arg(ui->comboBox->currentText())
-                   .arg(ui->episodeSpin->text());
-    QDir dir(recordRootPath);
 
-    QString absolutePath = dir.absoluteFilePath(filename);
+
+    QDir curEpsRootDir(recordRootPath);
+    curEpsRootDir.cd(QString("%1/%2/").arg(ui->comboBox->currentText(), ui->episodeSpin->text()));
+    QStringList filters;
+    filters << "*.jpg";
+    QFileInfoList fileInfoList = curEpsRootDir.entryInfoList(filters, QDir::Files);
+    qInfo() << fileInfoList.size();
+
+    for (const auto &fileInfo : qAsConst(fileInfoList)) {
+        QString baseName = fileInfo.baseName();
+        bool ok = false;
+        int num = baseName.toInt(&ok);
+        if (ok && num > ui->stepSpin->value()) {
+            if (QFile::remove(fileInfo.absoluteFilePath())) {
+                qInfo() << "Deleted:" << fileInfo.absoluteFilePath();
+            } else {
+                qInfo() << "Failed to delete:" << fileInfo.absoluteFilePath();
+            }
+        }
+    }
+
+    QString absolutePath = curEpsRootDir.absoluteFilePath("actions.log");
     QFile logFile(absolutePath);
-    if (!logFile.open(QIODevice::ReadWrite | QIODevice::Text)) {
+    if (!logFile.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate)) {
         qInfo() << "Open file " << filename << " failed.";
         return;
     }
